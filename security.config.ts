@@ -54,6 +54,8 @@ export const securityConfig = {
   validation: {
     // Input sanitization patterns
     sanitizePattern: /[<>'"&]/g,
+    // Pattern for destination inputs (allows letters, spaces, accents, hyphens, apostrophes, periods, commas)
+    destinationSanitizePattern: /[<>"\/\\{}|\[\]`^]/g,
     numericPattern: /^[0-9.]*$/,
     maxInputLength: 100,
     maxPortfolioItems: 20,
@@ -98,6 +100,81 @@ export const sanitizeInput = (input: string): string => {
     .trim()
     .substring(0, securityConfig.validation.maxInputLength)
     .replace(securityConfig.validation.sanitizePattern, '');
+};
+
+/**
+ * Input sanitization utility for destination fields (allows spaces and common characters)
+ */
+export const sanitizeDestinationInput = (input: string): string => {
+  return input
+    .substring(0, securityConfig.validation.maxInputLength)
+    .replace(securityConfig.validation.destinationSanitizePattern, '');
+};
+
+/**
+ * Input sanitization utility for destination fields when submitting (trims spaces)
+ */
+export const sanitizeDestinationInputForSubmit = (input: string): string => {
+  return input
+    .trim()
+    .substring(0, securityConfig.validation.maxInputLength)
+    .replace(securityConfig.validation.destinationSanitizePattern, '');
+};
+
+/**
+ * Format destination name to proper title case
+ * Handles special cases for Italian and international city names
+ */
+export const formatDestinationName = (input: string): string => {
+  if (!input || input.trim().length === 0) return input;
+  
+  // Words that should remain lowercase (articles, prepositions, etc.)
+  const lowercaseWords = new Set([
+    'di', 'da', 'del', 'della', 'delle', 'dei', 'degli', 'dal', 'dalla', 'dalle',
+    'al', 'alla', 'alle', 'ai', 'agli', 'in', 'con', 'su', 'per', 'tra', 'fra',
+    'lo', 'la', 'le', 'il', 'i', 'gli', 'un', 'una', 'uno',
+    'of', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'with',
+    'by', 'from', 'up', 'about', 'into', 'over', 'after', 'de', 'du', 'des',
+    'le', 'la', 'les', 'et', 'ou', 'dans', 'sur', 'avec', 'pour', 'par'
+  ]);
+  
+  // Words that should remain uppercase
+  const uppercaseWords = new Set([
+    'usa', 'uk', 'uae', 'eu', 'usa', 'urss', 'rsa'
+  ]);
+  
+  return input
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word, index) => {
+      // Remove any non-letter characters for checking, but keep them in the result
+      const cleanWord = word.replace(/[^a-zA-ZàáâäèéêëìíîïòóôöùúûüñçÀÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜÑÇ]/g, '');
+      
+      // First word is always capitalized
+      if (index === 0) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }
+      
+      // Check if it's a word that should remain uppercase
+      if (uppercaseWords.has(cleanWord.toLowerCase())) {
+        return word.toUpperCase();
+      }
+      
+      // Check if it's a word that should remain lowercase (except if it's the first word)
+      if (lowercaseWords.has(cleanWord.toLowerCase())) {
+        return word.toLowerCase();
+      }
+      
+      // Handle special cases for Italian cities
+      if (cleanWord.toLowerCase() === 'san' || cleanWord.toLowerCase() === 'sant' || cleanWord.toLowerCase() === 'santa') {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }
+      
+      // Default: capitalize first letter
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
 };
 
 /**

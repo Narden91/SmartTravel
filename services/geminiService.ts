@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 import { TravelAnalysisInputs, TravelAnalysisResults, PackingAssistantInputs, PackingResults } from '../types';
-import { isDomainAllowed, sanitizeInput } from '../security.config';
+import { isDomainAllowed, sanitizeDestinationInputForSubmit } from '../security.config';
 import RateLimitService from './rateLimitService';
 
 // Get API key from environment variables (supports both development and production)
@@ -281,7 +281,7 @@ export const getTravelAnalysis = async (inputs: TravelAnalysisInputs): Promise<T
     }
 
     const { destination, startDate, endDate } = inputs;
-    const sanitizedDestination = sanitizeInput(destination);
+    const sanitizedDestination = sanitizeDestinationInputForSubmit(destination);
 
     const prompt = `
         Agisci come un esperto consulente di viaggi. Analizza la destinazione ${sanitizedDestination} per il periodo dal ${startDate} al ${endDate}.
@@ -381,7 +381,7 @@ export const getPackingList = async (inputs: PackingAssistantInputs): Promise<Pa
     }
 
     const { destination, startDate, endDate, gender } = inputs;
-    const sanitizedDestination = sanitizeInput(destination);
+    const sanitizedDestination = sanitizeDestinationInputForSubmit(destination);
     const duration = Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24));
 
     const prompt = `

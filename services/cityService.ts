@@ -163,15 +163,12 @@ export const searchDestinations = (
     const {
         maxResults = 8,
         includeCountries = true,
-        minScore = 30
+        minScore = 50 // Increased minimum score for better matches
     } = options;
     
     if (!query || query.trim().length < 2) {
-        // Return popular destinations when no query
-        return POPULAR_DESTINATIONS
-            .filter(dest => includeCountries || dest.type === 'city')
-            .sort((a, b) => b.popularity - a.popularity)
-            .slice(0, maxResults);
+        // Return empty array when no query - don't show suggestions for empty input
+        return [];
     }
     
     const trimmedQuery = query.trim();
@@ -184,9 +181,11 @@ export const searchDestinations = (
             const countryScore = fuzzyMatch(trimmedQuery, destination.country);
             const displayScore = fuzzyMatch(trimmedQuery, destination.displayName);
             
-            // Take the best score and add popularity bonus
+            // Take the best score
             const bestScore = Math.max(nameScore, countryScore, displayScore);
-            const popularityBonus = destination.popularity * 2; // Small boost for popular destinations
+            
+            // Only add small popularity bonus for exact matches or very good matches
+            const popularityBonus = bestScore >= 70 ? destination.popularity : 0;
             const finalScore = bestScore + popularityBonus;
             
             return {
@@ -215,6 +214,14 @@ export const searchDestinations = (
 export const getPopularDestinations = (limit: number = 6): CityResult[] => {
     return POPULAR_DESTINATIONS
         .filter(dest => dest.type === 'city') // Only cities for popular suggestions
+        .sort((a, b) => b.popularity - a.popularity)
+        .slice(0, limit);
+};
+
+// Get destinations when no search is performed but user focuses on input
+export const getInitialSuggestions = (limit: number = 6): CityResult[] => {
+    return POPULAR_DESTINATIONS
+        .filter(dest => dest.type === 'city' && dest.popularity >= 8) // Only highly popular cities
         .sort((a, b) => b.popularity - a.popularity)
         .slice(0, limit);
 };
@@ -249,6 +256,7 @@ export const validateDestination = (destination: string): boolean => {
 export default {
     searchDestinations,
     getPopularDestinations,
+    getInitialSuggestions,
     getDestinationsByRegion,
     validateDestination
 };

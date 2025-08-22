@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { ArrowLeftIcon, BackpackIcon, ShirtIcon, FirstAidIcon, SparklesIcon, CheckIcon, DownloadIcon } from './icons';
 import { PackingAssistantInputs, PackingResults, PackingItem } from '../types';
 import { getPackingList } from '../services/geminiService';
-import { searchDestinations, getPopularDestinations, CityResult } from '../services/cityService';
-import { sanitizeInput } from '../security.config';
+import { searchDestinations, getInitialSuggestions, CityResult } from '../services/cityService';
+import { sanitizeDestinationInput, sanitizeDestinationInputForSubmit, formatDestinationName } from '../security.config';
 
 interface PackingAssistantProps {
     onBack: () => void;
@@ -27,7 +27,7 @@ const PackingAssistant: React.FC<PackingAssistantProps> = ({ onBack }) => {
 
     const handleInputChange = (field: keyof PackingAssistantInputs, value: string) => {
         // Sanitize input for security
-        const sanitizedValue = field === 'destination' ? sanitizeInput(value) : value;
+        const sanitizedValue = field === 'destination' ? sanitizeDestinationInput(value) : value;
         setInputs(prev => ({ ...prev, [field]: sanitizedValue }));
         
         // Handle city suggestions for destination field
@@ -35,9 +35,9 @@ const PackingAssistant: React.FC<PackingAssistantProps> = ({ onBack }) => {
             if (sanitizedValue.trim().length >= 2) {
                 const newSuggestions = searchDestinations(sanitizedValue, { maxResults: 6 });
                 setSuggestions(newSuggestions);
-                setShowSuggestions(true);
+                setShowSuggestions(newSuggestions.length > 0);
             } else if (sanitizedValue.trim().length === 0) {
-                setSuggestions(getPopularDestinations(6));
+                setSuggestions(getInitialSuggestions(6));
                 setShowSuggestions(inputFocused);
             } else {
                 setShowSuggestions(false);
@@ -48,27 +48,35 @@ const PackingAssistant: React.FC<PackingAssistantProps> = ({ onBack }) => {
     const handleDestinationFocus = () => {
         setInputFocused(true);
         if (inputs.destination.trim().length === 0) {
-            setSuggestions(getPopularDestinations(6));
+            setSuggestions(getInitialSuggestions(6));
             setShowSuggestions(true);
-        } else if (suggestions.length > 0) {
-            setShowSuggestions(true);
+        } else if (inputs.destination.trim().length >= 2) {
+            const newSuggestions = searchDestinations(inputs.destination, { maxResults: 6 });
+            setSuggestions(newSuggestions);
+            setShowSuggestions(newSuggestions.length > 0);
         }
     };
 
     const handleDestinationBlur = () => {
         setInputFocused(false);
+        // Format the destination name when user finishes typing
+        if (inputs.destination.trim().length > 0) {
+            const formattedDestination = formatDestinationName(inputs.destination);
+            setInputs(prev => ({ ...prev, destination: formattedDestination }));
+        }
         // Delay hiding suggestions to allow for clicks
         setTimeout(() => setShowSuggestions(false), 200);
     };
 
     const handleSuggestionClick = (suggestion: CityResult) => {
-        setInputs(prev => ({ ...prev, destination: suggestion.displayName }));
+        const formattedName = formatDestinationName(suggestion.displayName);
+        setInputs(prev => ({ ...prev, destination: formattedName }));
         setShowSuggestions(false);
     };
 
     const handleGenerateList = async () => {
         // Validate and sanitize inputs
-        const sanitizedDestination = sanitizeInput(inputs.destination.trim());
+        const sanitizedDestination = sanitizeDestinationInputForSubmit(inputs.destination);
         
         if (!sanitizedDestination || !inputs.startDate || !inputs.endDate || !inputs.gender) {
             setError('Inserisci tutti i campi richiesti');
