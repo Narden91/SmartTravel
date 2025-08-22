@@ -44,15 +44,8 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateToTravelAnalysis, onNavig
         <div className="min-h-screen flex flex-col pt-20 relative">
             {/* Seamless Background System */}
             <div 
-                className="fixed inset-0 z-0"
-                style={{
-                    backgroundImage: 'url(/travel.jpg)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundAttachment: 'fixed',
-                    opacity: 0.15
-                }}
+                className="fixed inset-0 z-0 bg-travel-image"
+                style={{ opacity: 0.15 }}
             />
             <div className="fixed inset-0 z-0 bg-gradient-to-b from-blue-50/85 via-white/75 to-purple-50/85" />
             

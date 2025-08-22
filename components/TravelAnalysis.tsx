@@ -146,15 +146,8 @@ const TravelAnalysis: React.FC<TravelAnalysisProps> = ({ onBack }) => {
         <div className="min-h-screen pt-20 pb-12 relative">
             {/* Travel Analysis Background */}
             <div 
-                className="fixed inset-0 z-0"
-                style={{
-                    backgroundImage: 'url(/travel.jpg)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundAttachment: 'fixed',
-                    opacity: 0.08
-                }}
+                className="fixed inset-0 z-0 bg-travel-image"
+                style={{ opacity: 0.08 }}
             />
             <div className="fixed inset-0 z-0 bg-gradient-to-b from-blue-50/90 via-white/85 to-indigo-50/90" />
             

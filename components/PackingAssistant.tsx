@@ -299,15 +299,8 @@ const PackingAssistant: React.FC<PackingAssistantProps> = ({ onBack }) => {
         <div className="min-h-screen pt-20 pb-12 relative">
             {/* Packing Assistant Background */}
             <div 
-                className="fixed inset-0 z-0"
-                style={{
-                    backgroundImage: 'url(/travel.jpg)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundAttachment: 'fixed',
-                    opacity: 0.08
-                }}
+                className="fixed inset-0 z-0 bg-travel-image"
+                style={{ opacity: 0.08 }}
             />
             <div className="fixed inset-0 z-0 bg-gradient-to-b from-green-50/90 via-white/85 to-teal-50/90" />
             
