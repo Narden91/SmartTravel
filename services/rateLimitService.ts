@@ -187,7 +187,9 @@ class RateLimitService {
                 if (timeSinceLastFailure > 10 * 60 * 1000) {
                     this.circuitBreaker.state = 'CLOSED';
                     this.circuitBreaker.failures = 0;
-                    console.log('[RateLimit] Circuit breaker CLOSED - service recovered');
+                    if (process.env.NODE_ENV === 'development') {
+                        console.log('[RateLimit] Circuit breaker CLOSED - service recovered');
+                    }
                 }
                 break;
         }
@@ -202,10 +204,14 @@ class RateLimitService {
         
         if (this.circuitBreaker.failures >= 5 && this.circuitBreaker.state === 'CLOSED') {
             this.circuitBreaker.state = 'OPEN';
-            console.warn('[RateLimit] Circuit breaker OPEN - too many failures');
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('[RateLimit] Circuit breaker OPEN - too many failures');
+            }
         } else if (this.circuitBreaker.state === 'HALF_OPEN') {
             this.circuitBreaker.state = 'OPEN';
-            console.warn('[RateLimit] Circuit breaker back to OPEN - failure during recovery');
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('[RateLimit] Circuit breaker back to OPEN - failure during recovery');
+            }
         }
     }
 

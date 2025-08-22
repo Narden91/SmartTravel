@@ -3,6 +3,7 @@ import { ArrowLeftIcon, BackpackIcon, ShirtIcon, FirstAidIcon, SparklesIcon, Che
 import { PackingAssistantInputs, PackingResults, PackingItem } from '../types';
 import { getPackingList } from '../services/geminiService';
 import { searchDestinations, getPopularDestinations, CityResult } from '../services/cityService';
+import { sanitizeInput } from '../security.config';
 
 interface PackingAssistantProps {
     onBack: () => void;
@@ -25,15 +26,17 @@ const PackingAssistant: React.FC<PackingAssistantProps> = ({ onBack }) => {
     const [inputFocused, setInputFocused] = useState(false);
 
     const handleInputChange = (field: keyof PackingAssistantInputs, value: string) => {
-        setInputs(prev => ({ ...prev, [field]: value }));
+        // Sanitize input for security
+        const sanitizedValue = field === 'destination' ? sanitizeInput(value) : value;
+        setInputs(prev => ({ ...prev, [field]: sanitizedValue }));
         
         // Handle city suggestions for destination field
         if (field === 'destination') {
-            if (value.trim().length >= 2) {
-                const newSuggestions = searchDestinations(value, { maxResults: 6 });
+            if (sanitizedValue.trim().length >= 2) {
+                const newSuggestions = searchDestinations(sanitizedValue, { maxResults: 6 });
                 setSuggestions(newSuggestions);
                 setShowSuggestions(true);
-            } else if (value.trim().length === 0) {
+            } else if (sanitizedValue.trim().length === 0) {
                 setSuggestions(getPopularDestinations(6));
                 setShowSuggestions(inputFocused);
             } else {
@@ -64,13 +67,41 @@ const PackingAssistant: React.FC<PackingAssistantProps> = ({ onBack }) => {
     };
 
     const handleGenerateList = async () => {
-        if (!inputs.destination || !inputs.startDate || !inputs.endDate || !inputs.gender) {
+        // Validate and sanitize inputs
+        const sanitizedDestination = sanitizeInput(inputs.destination.trim());
+        
+        if (!sanitizedDestination || !inputs.startDate || !inputs.endDate || !inputs.gender) {
             setError('Inserisci tutti i campi richiesti');
             return;
         }
 
-        if (new Date(inputs.endDate) <= new Date(inputs.startDate)) {
+        // Validate destination length (additional security check)
+        if (sanitizedDestination.length < 2 || sanitizedDestination.length > 100) {
+            setError('La destinazione deve essere tra 2 e 100 caratteri');
+            return;
+        }
+
+        // Validate dates
+        const startDate = new Date(inputs.startDate);
+        const endDate = new Date(inputs.endDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (endDate <= startDate) {
             setError('La data di fine deve essere successiva alla data di inizio');
+            return;
+        }
+
+        if (startDate < today) {
+            setError('La data di partenza non può essere nel passato');
+            return;
+        }
+
+        // Validate trip duration (max 1 year for security/reasonableness)
+        const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 365) {
+            setError('La durata del viaggio non può superare un anno');
             return;
         }
 
@@ -78,12 +109,19 @@ const PackingAssistant: React.FC<PackingAssistantProps> = ({ onBack }) => {
         setError(null);
         
         try {
-            const packingList = await getPackingList(inputs);
+            // Use sanitized destination
+            const packingInputs = {
+                ...inputs,
+                destination: sanitizedDestination
+            };
+            const packingList = await getPackingList(packingInputs);
             setResults(packingList);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Errore durante la generazione della lista';
             setError(errorMessage);
-            console.error('Packing list error:', err);
+            if (process.env.NODE_ENV === 'development') {
+                console.error('Packing list error:', err);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -250,8 +288,22 @@ const PackingAssistant: React.FC<PackingAssistantProps> = ({ onBack }) => {
     };
 
     return (
-        <div className="min-h-screen pt-20 pb-12">
-            <div className="container">
+        <div className="min-h-screen pt-20 pb-12 relative">
+            {/* Packing Assistant Background */}
+            <div 
+                className="fixed inset-0 z-0"
+                style={{
+                    backgroundImage: 'url(/travel.jpg)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundAttachment: 'fixed',
+                    opacity: 0.08
+                }}
+            />
+            <div className="fixed inset-0 z-0 bg-gradient-to-b from-green-50/90 via-white/85 to-teal-50/90" />
+            
+            <div className="container relative z-10">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
                     <button 

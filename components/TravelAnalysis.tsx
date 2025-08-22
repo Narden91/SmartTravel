@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { ArrowLeftIcon, MapIcon, CalendarIcon, SunIcon, CurrencyIcon, SparklesIcon, CheckIcon } from './icons';
+import { ArrowLeftIcon, MapIcon, SunIcon, CloudIcon, ThermometerIcon, DropletIcon, WindIcon, CurrencyIcon, HotelIcon, ForkKnifeIcon, CarIcon, TicketIcon, WalletIcon, SparklesIcon, CheckIcon } from './icons';
 import { TravelAnalysisInputs, TravelAnalysisResults } from '../types';
 import { getTravelAnalysis } from '../services/geminiService';
 import { searchDestinations, getPopularDestinations, CityResult } from '../services/cityService';
+import { sanitizeInput } from '../security.config';
 
 interface TravelAnalysisProps {
     onBack: () => void;
@@ -24,15 +25,17 @@ const TravelAnalysis: React.FC<TravelAnalysisProps> = ({ onBack }) => {
     const [inputFocused, setInputFocused] = useState(false);
 
     const handleInputChange = (field: keyof TravelAnalysisInputs, value: string) => {
-        setInputs(prev => ({ ...prev, [field]: value }));
+        // Sanitize input for security
+        const sanitizedValue = field === 'destination' ? sanitizeInput(value) : value;
+        setInputs(prev => ({ ...prev, [field]: sanitizedValue }));
         
         // Handle city suggestions for destination field
         if (field === 'destination') {
-            if (value.trim().length >= 2) {
-                const newSuggestions = searchDestinations(value, { maxResults: 6 });
+            if (sanitizedValue.trim().length >= 2) {
+                const newSuggestions = searchDestinations(sanitizedValue, { maxResults: 6 });
                 setSuggestions(newSuggestions);
                 setShowSuggestions(true);
-            } else if (value.trim().length === 0) {
+            } else if (sanitizedValue.trim().length === 0) {
                 setSuggestions(getPopularDestinations(6));
                 setShowSuggestions(inputFocused);
             } else {
@@ -63,13 +66,41 @@ const TravelAnalysis: React.FC<TravelAnalysisProps> = ({ onBack }) => {
     };
 
     const handleAnalyze = async () => {
-        if (!inputs.destination || !inputs.startDate || !inputs.endDate) {
+        // Validate and sanitize inputs
+        const sanitizedDestination = sanitizeInput(inputs.destination.trim());
+        
+        if (!sanitizedDestination || !inputs.startDate || !inputs.endDate) {
             setError('Inserisci tutti i campi richiesti');
             return;
         }
 
-        if (new Date(inputs.endDate) <= new Date(inputs.startDate)) {
+        // Validate destination length (additional security check)
+        if (sanitizedDestination.length < 2 || sanitizedDestination.length > 100) {
+            setError('La destinazione deve essere tra 2 e 100 caratteri');
+            return;
+        }
+
+        // Validate dates
+        const startDate = new Date(inputs.startDate);
+        const endDate = new Date(inputs.endDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (endDate <= startDate) {
             setError('La data di fine deve essere successiva alla data di inizio');
+            return;
+        }
+
+        if (startDate < today) {
+            setError('La data di partenza non può essere nel passato');
+            return;
+        }
+
+        // Validate trip duration (max 1 year for security/reasonableness)
+        const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 365) {
+            setError('La durata del viaggio non può superare un anno');
             return;
         }
 
@@ -77,12 +108,19 @@ const TravelAnalysis: React.FC<TravelAnalysisProps> = ({ onBack }) => {
         setError(null);
         
         try {
-            const analysis = await getTravelAnalysis(inputs);
+            // Use sanitized destination
+            const analysisInputs = {
+                ...inputs,
+                destination: sanitizedDestination
+            };
+            const analysis = await getTravelAnalysis(analysisInputs);
             setResults(analysis);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Errore durante l\'analisi del viaggio';
             setError(errorMessage);
-            console.error('Travel analysis error:', err);
+            if (process.env.NODE_ENV === 'development') {
+                console.error('Travel analysis error:', err);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -97,8 +135,22 @@ const TravelAnalysis: React.FC<TravelAnalysisProps> = ({ onBack }) => {
     };
 
     return (
-        <div className="min-h-screen pt-20 pb-12">
-            <div className="container">
+        <div className="min-h-screen pt-20 pb-12 relative">
+            {/* Travel Analysis Background */}
+            <div 
+                className="fixed inset-0 z-0"
+                style={{
+                    backgroundImage: 'url(/travel.jpg)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundAttachment: 'fixed',
+                    opacity: 0.08
+                }}
+            />
+            <div className="fixed inset-0 z-0 bg-gradient-to-b from-blue-50/90 via-white/85 to-indigo-50/90" />
+            
+            <div className="container relative z-10">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
                     <button 
@@ -245,55 +297,145 @@ const TravelAnalysis: React.FC<TravelAnalysisProps> = ({ onBack }) => {
                             </div>
 
                             {/* Weather Overview */}
-                            <div className="travel-card p-6">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <SunIcon className="w-6 h-6 text-yellow-500" />
+                            <div className="travel-card p-6 bg-gradient-to-br from-yellow-50 to-blue-50 border-yellow-200">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full shadow-lg">
+                                        <SunIcon className="w-8 h-8 text-white" />
+                                    </div>
                                     <h3 className="heading-h3" style={{color: '#1f2937'}}>Panoramica Meteo</h3>
+                                    <div className="ml-auto flex gap-4">
+                                        <CloudIcon className="w-5 h-5 text-blue-400" />
+                                        <WindIcon className="w-5 h-5 text-gray-400" />
+                                    </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="text-center">
-                                        <div className="text-3xl font-bold text-blue-600 mb-1">
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="text-center p-4 bg-white/60 rounded-xl shadow-sm border border-blue-100">
+                                        <div className="flex items-center justify-center gap-2 mb-3">
+                                            <ThermometerIcon className="w-6 h-6 text-red-500" />
+                                            <span className="text-sm font-medium text-gray-600">Temperatura</span>
+                                        </div>
+                                        <div className="text-4xl font-bold text-blue-600 mb-2">
                                             {results.weatherOverview.averageTemp}°C
                                         </div>
-                                        <div className="body-sm mb-1" style={{color: '#4b5563'}}>Temperatura Media</div>
+                                        <div className="body-sm text-gray-500">Media giornaliera</div>
                                     </div>
-                                    <div className="text-center">
-                                        <div className="body mb-1" style={{color: '#1f2937'}}>
+                                    
+                                    <div className="text-center p-4 bg-white/60 rounded-xl shadow-sm border border-blue-100">
+                                        <div className="flex items-center justify-center gap-2 mb-3">
+                                            <CloudIcon className="w-6 h-6 text-blue-500" />
+                                            <span className="text-sm font-medium text-gray-600">Condizioni</span>
+                                        </div>
+                                        <div className="text-lg font-semibold text-gray-800 mb-2">
                                             {results.weatherOverview.description}
                                         </div>
-                                        <div className="body-sm" style={{color: '#4b5563'}}>Condizioni</div>
+                                        <div className="body-sm text-gray-500">Clima generale</div>
                                     </div>
-                                    <div className="text-center">
-                                        <div className="body mb-1" style={{color: '#1f2937'}}>
+                                    
+                                    <div className="text-center p-4 bg-white/60 rounded-xl shadow-sm border border-blue-100">
+                                        <div className="flex items-center justify-center gap-2 mb-3">
+                                            <DropletIcon className="w-6 h-6 text-cyan-500" />
+                                            <span className="text-sm font-medium text-gray-600">Precipitazioni</span>
+                                        </div>
+                                        <div className="text-lg font-semibold text-gray-800 mb-2">
                                             {results.weatherOverview.precipitation}
                                         </div>
-                                        <div className="body-sm" style={{color: '#4b5563'}}>Precipitazioni</div>
+                                        <div className="body-sm text-gray-500">Probabilità pioggia</div>
+                                    </div>
+                                </div>
+                                
+                                {/* Weather tip section */}
+                                <div className="mt-6 p-4 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-lg border border-blue-200">
+                                    <div className="flex items-start gap-3">
+                                        <div className="p-2 bg-white rounded-lg shadow-sm">
+                                            <SunIcon className="w-5 h-5 text-yellow-500" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-semibold text-gray-800 mb-1">💡 Consiglio Meteo</h4>
+                                            <p className="text-sm text-gray-600">
+                                                {results.weatherOverview.averageTemp && Number(results.weatherOverview.averageTemp) > 25
+                                                    ? "Temperature elevate: porta abbigliamento leggero, protezione solare e mantieniti idratato!"
+                                                    : results.weatherOverview.averageTemp && Number(results.weatherOverview.averageTemp) < 10
+                                                    ? "Temperature fresche: porta abbigliamento caldo a strati e non dimenticare una giacca!"
+                                                    : "Temperature moderate: ideali per escursioni e attività all'aperto. Porta un mix di abbigliamento!"}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Cost Analysis */}
-                            <div className="travel-card p-6">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <CurrencyIcon className="w-6 h-6 text-green-500" />
+                            <div className="travel-card p-6 bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full shadow-lg">
+                                        <CurrencyIcon className="w-8 h-8 text-white" />
+                                    </div>
                                     <h3 className="heading-h3" style={{color: '#1f2937'}}>Analisi Costi</h3>
+                                    <div className="ml-auto flex gap-2">
+                                        <WalletIcon className="w-5 h-5 text-green-400" />
+                                        <TicketIcon className="w-5 h-5 text-blue-400" />
+                                    </div>
                                 </div>
+                                
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <div>
-                                        <div className="body-sm mb-1" style={{color: '#4b5563'}}>Alloggio</div>
-                                        <div className="font-semibold" style={{color: '#1f2937'}}>{results.costAnalysis.accommodation}</div>
+                                    <div className="text-center p-4 bg-white/60 rounded-xl shadow-sm border border-green-100">
+                                        <div className="flex items-center justify-center gap-2 mb-3">
+                                            <HotelIcon className="w-6 h-6 text-blue-600" />
+                                            <span className="text-sm font-medium text-gray-600">Alloggio</span>
+                                        </div>
+                                        <div className="text-lg font-bold text-green-600 mb-1">
+                                            {results.costAnalysis.accommodation}
+                                        </div>
+                                        <div className="body-sm text-gray-500">per notte</div>
                                     </div>
-                                    <div>
-                                        <div className="body-sm mb-1" style={{color: '#4b5563'}}>Cibo</div>
-                                        <div className="font-semibold" style={{color: '#1f2937'}}>{results.costAnalysis.food}</div>
+                                    
+                                    <div className="text-center p-4 bg-white/60 rounded-xl shadow-sm border border-green-100">
+                                        <div className="flex items-center justify-center gap-2 mb-3">
+                                            <ForkKnifeIcon className="w-6 h-6 text-orange-500" />
+                                            <span className="text-sm font-medium text-gray-600">Cibo</span>
+                                        </div>
+                                        <div className="text-lg font-bold text-green-600 mb-1">
+                                            {results.costAnalysis.food}
+                                        </div>
+                                        <div className="body-sm text-gray-500">al giorno</div>
                                     </div>
-                                    <div>
-                                        <div className="body-sm mb-1" style={{color: '#4b5563'}}>Trasporti</div>
-                                        <div className="font-semibold" style={{color: '#1f2937'}}>{results.costAnalysis.transport}</div>
+                                    
+                                    <div className="text-center p-4 bg-white/60 rounded-xl shadow-sm border border-green-100">
+                                        <div className="flex items-center justify-center gap-2 mb-3">
+                                            <CarIcon className="w-6 h-6 text-purple-600" />
+                                            <span className="text-sm font-medium text-gray-600">Trasporti</span>
+                                        </div>
+                                        <div className="text-lg font-bold text-green-600 mb-1">
+                                            {results.costAnalysis.transport}
+                                        </div>
+                                        <div className="body-sm text-gray-500">al giorno</div>
                                     </div>
-                                    <div>
-                                        <div className="body-sm mb-1" style={{color: '#4b5563'}}>Attività</div>
-                                        <div className="font-semibold" style={{color: '#1f2937'}}>{results.costAnalysis.activities}</div>
+                                    
+                                    <div className="text-center p-4 bg-white/60 rounded-xl shadow-sm border border-green-100">
+                                        <div className="flex items-center justify-center gap-2 mb-3">
+                                            <TicketIcon className="w-6 h-6 text-indigo-600" />
+                                            <span className="text-sm font-medium text-gray-600">Attività</span>
+                                        </div>
+                                        <div className="text-lg font-bold text-green-600 mb-1">
+                                            {results.costAnalysis.activities}
+                                        </div>
+                                        <div className="body-sm text-gray-500">al giorno</div>
+                                    </div>
+                                </div>
+                                
+                                {/* Budget tip section */}
+                                <div className="mt-6 p-4 bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg border border-green-200">
+                                    <div className="flex items-start gap-3">
+                                        <div className="p-2 bg-white rounded-lg shadow-sm">
+                                            <WalletIcon className="w-5 h-5 text-green-500" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-semibold text-gray-800 mb-1">💰 Consiglio Budget</h4>
+                                            <p className="text-sm text-gray-600">
+                                                Aggiungi sempre un 10-20% extra al budget preventivato per spese impreviste e souvenir. 
+                                                Considera di portare contanti per i mercati locali e piccoli negozi.
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

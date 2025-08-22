@@ -8,15 +8,18 @@ import RateLimitService from './rateLimitService';
 // Use process.env for Node.js environment (defined in vite.config.ts) as fallback
 const apiKey = process.env.VITE_GEMINI_API_KEY;
 
-console.log('[GeminiService] Environment check:', {
-    hasApiKey: !!apiKey,
-    keyLength: apiKey ? apiKey.length : 0,
-    keyPreview: apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT_FOUND',
-    nodeEnv: process.env.NODE_ENV
-});
+// Security: Only log API key status in development mode, never expose actual key
+if (process.env.NODE_ENV === 'development') {
+    console.log('[GeminiService] Environment check:', {
+        hasApiKey: !!apiKey,
+        nodeEnv: process.env.NODE_ENV
+    });
+}
 
 if (!apiKey) {
-    console.warn("Gemini API key not found. Using mock responses. Set VITE_GEMINI_API_KEY environment variable for real functionality.");
+    if (process.env.NODE_ENV === 'development') {
+        console.warn("Gemini API key not found. Using mock responses. Set VITE_GEMINI_API_KEY environment variable for real functionality.");
+    }
 }
 
 // Validate API endpoint domain for security
@@ -69,7 +72,9 @@ const retryWithBackoff = async <T>(
             
             // Exponential backoff with jitter
             const delay = Math.min(baseDelay * Math.pow(2, attempt) + Math.random() * 1000, 30000);
-            console.warn(`[GeminiService] Attempt ${attempt + 1} failed, retrying in ${delay}ms:`, error.message);
+            if (process.env.NODE_ENV === 'development') {
+                console.warn(`[GeminiService] Attempt ${attempt + 1} failed, retrying in ${delay}ms:`, error.message);
+            }
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
@@ -256,7 +261,9 @@ const generateMockPackingList = (inputs: PackingAssistantInputs): PackingResults
 export const getTravelAnalysis = async (inputs: TravelAnalysisInputs): Promise<TravelAnalysisResults> => {
     // If no API key, return mock data
     if (!apiKey || !ai) {
-        console.log('[GeminiService] Using mock travel analysis data');
+        if (process.env.NODE_ENV === 'development') {
+            console.log('[GeminiService] Using mock travel analysis data');
+        }
         return generateMockTravelAnalysis(inputs);
     }
 
@@ -354,7 +361,9 @@ export const getTravelAnalysis = async (inputs: TravelAnalysisInputs): Promise<T
 export const getPackingList = async (inputs: PackingAssistantInputs): Promise<PackingResults> => {
     // If no API key, return mock data
     if (!apiKey || !ai) {
-        console.log('[GeminiService] Using mock packing list data');
+        if (process.env.NODE_ENV === 'development') {
+            console.log('[GeminiService] Using mock packing list data');
+        }
         return generateMockPackingList(inputs);
     }
 
