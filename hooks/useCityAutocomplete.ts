@@ -137,8 +137,7 @@ export function useCityAutocomplete(
         // Handle API errors with graceful fallback
         if (result.error) {
           const errorMessage = getErrorMessage(result.error);
-          console.warn('Autocomplete API warning:', errorMessage);
-          // Don't set error if we have fallback results
+          // Silent fallback - don't show technical details to users
           if (result.results.length === 0) {
             setError(errorMessage);
           }
@@ -154,6 +153,7 @@ export function useCityAutocomplete(
         setSource(null);
         setFromCache(false);
         
+        // Silent error logging - don't expose technical details to users
         console.error('Autocomplete search failed:', err);
       }
     } finally {
@@ -275,21 +275,21 @@ function getErrorMessage(error: unknown): string {
       case 'RATE_LIMIT_EXCEEDED':
         return `Troppe ricerche. Riprova tra ${autocompleteError.retryAfter || 60} secondi.`;
       case 'API_RATE_LIMIT':
-        return 'Servizio temporaneamente non disponibile. Usando suggerimenti locali.';
+        return 'Servizio temporaneamente non disponibile.';
       case 'TIMEOUT':
-        return 'Ricerca troppo lenta. Prova di nuovo.';
+        return 'Ricerca lenta. Prova di nuovo.';
       case 'NETWORK_ERROR':
-        return 'Problema di connessione. Usando suggerimenti locali.';
+        return 'Problema di connessione.';
       default:
-        return 'Errore durante la ricerca. Usando suggerimenti locali.';
+        return 'Errore durante la ricerca.';
     }
   }
   
   if (error instanceof Error) {
-    return error.message;
+    return 'Problema temporaneo nella ricerca.';
   }
   
-  return 'Errore sconosciuto durante la ricerca.';
+  return 'Errore temporaneo.';
 }
 
 export default useCityAutocomplete;

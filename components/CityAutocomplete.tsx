@@ -181,26 +181,9 @@ const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
     return 'border-gray-200 focus:border-blue-500 focus:ring-blue-200';
   };
 
-  // Get source indicator
+  // Get source indicator (removed for cleaner UI)
   const getSourceIndicator = () => {
-    if (!source) return null;
-    
-    const indicators = {
-      local: { icon: '🏠', text: 'Locale', color: 'text-green-600' },
-      api: { icon: '🌐', text: 'Online', color: 'text-blue-600' },
-      cache: { icon: '⚡', text: 'Cache', color: 'text-purple-600' },
-      mixed: { icon: '🔄', text: 'Misto', color: 'text-orange-600' }
-    };
-    
-    const indicator = indicators[source];
-    
-    return (
-      <div className={`text-xs ${indicator.color} flex items-center gap-1`}>
-        <span>{indicator.icon}</span>
-        <span>{indicator.text}</span>
-        {fromCache && <span title="Da cache">💾</span>}
-      </div>
-    );
+    return null; // Transparent implementation - users don't need technical details
   };
 
   return (
@@ -259,15 +242,10 @@ const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
         </div>
       )}
 
-      {/* Source indicator */}
-      {!error && (source || isLoading) && (
-        <div className="mt-1 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {getSourceIndicator()}
-          </div>
-          {isLoading && (
-            <span className="text-xs text-gray-500">Cercando...</span>
-          )}
+      {/* Loading indicator only (removed source indicators) */}
+      {isLoading && (
+        <div className="mt-1 flex items-center justify-end">
+          <span className="text-xs text-gray-500">Cercando...</span>
         </div>
       )}
 
@@ -300,28 +278,9 @@ const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
                 <div className="font-medium text-gray-900 text-sm truncate">
                   {suggestion.displayName}
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>
-                    {suggestion.type === 'city' ? 'Città' : 
-                     suggestion.type === 'country' ? 'Paese' : 'Regione'}
-                  </span>
-                  
-                  {/* Source badge */}
-                  <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                    suggestion.source === 'local' ? 'bg-green-100 text-green-700' :
-                    suggestion.source === 'api' ? 'bg-blue-100 text-blue-700' :
-                    'bg-purple-100 text-purple-700'
-                  }`}>
-                    {suggestion.source === 'local' ? 'Locale' : 
-                     suggestion.source === 'api' ? 'Online' : 'Cache'}
-                  </span>
-                  
-                  {/* Confidence indicator */}
-                  {suggestion.confidence && (
-                    <span className="text-gray-400">
-                      {suggestion.confidence}%
-                    </span>
-                  )}
+                <div className="text-xs text-gray-500">
+                  {suggestion.type === 'city' ? 'Città' : 
+                   suggestion.type === 'country' ? 'Paese' : 'Regione'}
                 </div>
               </div>
 
