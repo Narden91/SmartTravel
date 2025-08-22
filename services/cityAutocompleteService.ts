@@ -65,7 +65,7 @@ setInterval(() => cache.cleanup(), 10 * 60 * 1000);
 // Rate limiter for API calls
 class RateLimiter {
   private requests = new Map<string, number[]>();
-  private maxRequests = 30; // 30 requests per minute
+  private maxRequests = 20; // 20 requests per minute (conservative for Nominatim)
   private windowMs = 60 * 1000; // 1 minute
 
   canMakeRequest(key: string = 'default'): boolean {
@@ -128,33 +128,41 @@ async function fetchFromExternalAPI(
   }
 
   try {
-    // Use proxy in development, direct API in production with CORS handling
+    // Use OpenStreetMap Nominatim API (CORS-enabled, free)
     const isDevelopment = process.env.NODE_ENV === 'development';
+    
+    // For development, use proxy. For production (GitHub Pages), use direct API with CORS support
     const apiUrl = isDevelopment 
       ? `/api/geocoding/search?name=${encodeURIComponent(query)}&count=${maxResults}&language=it&format=json`
-      : `https://your-serverless-function.vercel.app/api/geocoding?q=${encodeURIComponent(query)}&count=${maxResults}`;
+      : `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=${Math.min(maxResults, 10)}&accept-language=it&addressdetails=1&extratags=1&namedetails=1`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout for external API
+
+    const headers: HeadersInit = {
+      'Accept': 'application/json',
+    };
+
+    // Add User-Agent for Nominatim (required by their usage policy)
+    if (!isDevelopment) {
+      // Note: User-Agent cannot be set from browser, but Nominatim accepts requests without it from browsers
+    }
 
     const response = await fetch(apiUrl, {
       signal: controller.signal,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers,
+      method: 'GET',
     });
 
     clearTimeout(timeoutId);
 
     if (!response.ok) {
       if (response.status === 429) {
-        const retryAfter = parseInt(response.headers.get('Retry-After') || '60');
         throw new AutocompleteError(
           'API rate limit exceeded',
           'API_RATE_LIMIT',
           true,
-          retryAfter
+          60
         );
       }
       throw new AutocompleteError(
@@ -166,19 +174,65 @@ async function fetchFromExternalAPI(
 
     const data = await response.json();
     
-    // Handle API response based on source
-    const results = isDevelopment ? data.results || [] : data.results || [];
+    // Handle different API response formats
+    let results: any[] = [];
     
-    return results.map((item: any) => ({
-      name: item.name,
-      country: item.country || '',
-      displayName: item.displayName || `${item.name}${item.country ? `, ${item.country}` : ''}`,
-      type: item.type || 'city',
-      popularity: item.popularity || 5,
-      coordinates: item.coordinates,
-      source: 'api' as const,
-      confidence: 85, // API results have high confidence
-    }));
+    if (isDevelopment) {
+      // Development proxy response format
+      results = data.results || [];
+    } else {
+      // Nominatim response format
+      results = Array.isArray(data) ? data : [];
+    }
+    
+    return results.map((item: any) => {
+      // Handle Nominatim format
+      if (!isDevelopment) {
+        const displayName = item.display_name || item.name || '';
+        const nameParts = displayName.split(',').map((part: string) => part.trim());
+        
+        // Extract city and country from display_name
+        const city = item.name || nameParts[0] || '';
+        const country = nameParts[nameParts.length - 1] || '';
+        
+        // Determine type based on OSM data
+        let type: 'city' | 'country' | 'region' = 'city';
+        if (item.class === 'place') {
+          if (['country'].includes(item.type)) {
+            type = 'country';
+          } else if (['state', 'region', 'province'].includes(item.type)) {
+            type = 'region';
+          }
+        }
+        
+        // Calculate popularity based on importance score
+        const importance = parseFloat(item.importance || '0');
+        const popularity = Math.min(10, Math.max(1, Math.round(importance * 10)));
+        
+        return {
+          name: city,
+          country: country,
+          displayName: `${city}${country && country !== city ? `, ${country}` : ''}`,
+          type,
+          popularity,
+          coordinates: item.lat && item.lon ? [parseFloat(item.lat), parseFloat(item.lon)] as [number, number] : undefined,
+          source: 'api' as const,
+          confidence: Math.min(95, 70 + (importance * 25)), // Convert importance to confidence
+        };
+      } else {
+        // Development proxy format (kept for consistency)
+        return {
+          name: item.name,
+          country: item.country || '',
+          displayName: item.displayName || `${item.name}${item.country ? `, ${item.country}` : ''}`,
+          type: item.type || 'city',
+          popularity: item.popularity || 5,
+          coordinates: item.coordinates,
+          source: 'api' as const,
+          confidence: 85,
+        };
+      }
+    }).slice(0, maxResults); // Ensure we don't exceed maxResults
 
   } catch (error) {
     if (error instanceof AutocompleteError) {
