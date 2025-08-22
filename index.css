@@ -49,12 +49,33 @@
    GLOBAL STYLES
    ====================================== */
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   padding: 0;
   font-family: var(--font-family-sans);
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f3e8ff 100%);
   min-height: 100vh;
+  /* Ensure seamless background */
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+/* Eliminate any potential gaps between sections */
+section {
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure smooth transitions between sections */
+.section,
+.section-sm,
+.section-lg {
+  position: relative;
+  margin: 0;
 }
 
 /* ======================================
@@ -264,6 +285,33 @@ body {
   transform: translateY(-8px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
   border-color: var(--color-primary);
+}
+
+/* Background Image Utility */
+.bg-travel-image {
+  background-image: url('/travel.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Mobile optimization for seamless scrolling */
+@media (max-width: 768px) {
+  .bg-travel-image {
+    background-attachment: scroll;
+  }
+  
+  body {
+    background-attachment: scroll;
+  }
+  
+  /* Ensure no gaps on mobile */
+  .section,
+  .section-sm,
+  .section-lg {
+    margin: 0;
+  }
 }
 
 .pastel-gradient {

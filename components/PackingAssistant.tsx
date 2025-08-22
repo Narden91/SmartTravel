@@ -266,7 +266,7 @@ const PackingAssistant: React.FC<PackingAssistantProps> = ({ onBack }) => {
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-12">
                         <BackpackIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                        <h1 className="heading-h1 mb-4" style={{color: '#1f2937'}}>Assistente Bagaglio</h1>
+                        <h1 className="heading-h1 mb-4" style={{color: '#1f2937'}}>Assistente Preparazione</h1>
                         <p className="body-lg max-w-2xl mx-auto" style={{color: '#4b5563'}}>
                             Inserisci le informazioni del tuo viaggio per ricevere una lista personalizzata di cosa portare
                         </p>
@@ -366,7 +366,7 @@ const PackingAssistant: React.FC<PackingAssistantProps> = ({ onBack }) => {
                                 ) : (
                                     <>
                                         <BackpackIcon className="w-5 h-5" />
-                                        Genera Lista Bagaglio
+                                        Genera Lista
                                     </>
                                 )}
                             </button>

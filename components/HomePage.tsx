@@ -41,9 +41,23 @@ const ToolCard: React.FC<{
 
 const HomePage: React.FC<HomePageProps> = ({ onNavigateToTravelAnalysis, onNavigateToPackingAssistant }) => {
     return (
-        <div className="min-h-screen flex flex-col pt-20">
+        <div className="min-h-screen flex flex-col pt-20 relative">
+            {/* Seamless Background System */}
+            <div 
+                className="fixed inset-0 z-0"
+                style={{
+                    backgroundImage: 'url(/travel.jpg)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundAttachment: 'fixed',
+                    opacity: 0.15
+                }}
+            />
+            <div className="fixed inset-0 z-0 bg-gradient-to-b from-blue-50/85 via-white/75 to-purple-50/85" />
+            
             {/* Hero Section */}
-            <section className="section-lg flex items-center justify-center relative overflow-hidden">
+            <section className="section-lg flex items-center justify-center relative overflow-hidden z-10">
                 {/* Background decorative elements */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-200 rounded-full opacity-30 animate-float"></div>
@@ -65,7 +79,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateToTravelAnalysis, onNavig
             </section>
 
             {/* Features Section */}
-            <section className="section">
+            <section className="section relative z-10">
                 <div className="container">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                         <ToolCard
@@ -87,7 +101,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateToTravelAnalysis, onNavig
             </section>
 
             {/* Info Section */}
-            <section className="section-sm bg-gradient-to-r from-blue-50 to-purple-50">
+            <section className="section-sm relative z-10">
                 <div className="container">
                     <div className="text-center max-w-4xl mx-auto">
                         <h2 className="heading-h2 text-gray-800 mb-6">
@@ -132,11 +146,13 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateToTravelAnalysis, onNavig
             </section>
 
             {/* Footer */}
-            <Footer 
-                onNavigateToTravelAnalysis={onNavigateToTravelAnalysis}
-                onNavigateToPackingAssistant={onNavigateToPackingAssistant}
-                onNavigateToHome={() => {}}
-            />
+            <div className="relative z-10">
+                <Footer 
+                    onNavigateToTravelAnalysis={onNavigateToTravelAnalysis}
+                    onNavigateToPackingAssistant={onNavigateToPackingAssistant}
+                    onNavigateToHome={() => {}}
+                />
+            </div>
         </div>
     );
 };

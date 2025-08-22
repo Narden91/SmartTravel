@@ -15,7 +15,7 @@ const Footer: React.FC<FooterProps> = ({
     const currentYear = useMemo(() => new Date().getFullYear(), []);
 
     return (
-        <footer className="section glass-effect-dark border-t border-white/10">
+        <footer className="section bg-transparent border-t border-white/20 relative z-10">
             <div className="container">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
                     {/* Brand Section */}
