@@ -30,13 +30,25 @@ export default defineConfig(({ mode }) => {
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com",
             "font-src 'self' https://fonts.gstatic.com data:",
             "img-src 'self' data: blob: https:",
-            "connect-src 'self' https://generativelanguage.googleapis.com",
+            "connect-src 'self' https://generativelanguage.googleapis.com https://geocoding-api.open-meteo.com",
             "frame-src 'none'",
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",
             "frame-ancestors 'none'"
           ].join('; ')
+        },
+        proxy: {
+          '/api/geocoding': {
+            target: 'https://geocoding-api.open-meteo.com/v1',
+            changeOrigin: true,
+            rewrite: (path) => path.replace(/^\/api\/geocoding/, ''),
+            configure: (proxy, _options) => {
+              proxy.on('error', (err, _req, _res) => {
+                console.log('Geocoding proxy error:', err);
+              });
+            }
+          }
         }
       },
       build: {

@@ -4,6 +4,7 @@ import { PackingAssistantInputs, PackingResults, PackingItem } from '../types';
 import { getPackingList } from '../services/geminiService';
 import { searchDestinations, getInitialSuggestions, CityResult } from '../services/cityService';
 import { sanitizeDestinationInput, sanitizeDestinationInputForSubmit, formatDestinationName } from '../security.config';
+import CityAutocomplete from './CityAutocomplete';
 
 interface PackingAssistantProps {
     onBack: () => void;
@@ -328,40 +329,25 @@ const PackingAssistant: React.FC<PackingAssistantProps> = ({ onBack }) => {
                     {/* Input Form */}
                     <div className="travel-card p-8 mb-8">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            {/* Destination Input with Suggestions */}
-                            <div className="relative">
-                                <label className="block body-sm font-semibold mb-2" style={{color: '#374151'}}>
-                                    Destinazione
-                                </label>
-                                <input
-                                    type="text"
+                            {/* Destination Input with Enhanced Autocomplete */}
+                            <div>
+                                <CityAutocomplete
                                     value={inputs.destination}
-                                    onChange={(e) => handleInputChange('destination', e.target.value)}
-                                    onFocus={handleDestinationFocus}
-                                    onBlur={handleDestinationBlur}
+                                    onChange={(value) => handleInputChange('destination', value)}
+                                    onSelect={(city) => {
+                                        const formattedName = formatDestinationName(city.displayName);
+                                        setInputs(prev => ({ ...prev, destination: formattedName }));
+                                    }}
+                                    label="Destinazione"
                                     placeholder="Es. Roma, Italia"
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                                    required
+                                    options={{
+                                        maxResults: 6,
+                                        useExternalAPI: true,
+                                        fallbackToLocal: true,
+                                        debounceMs: 300
+                                    }}
                                 />
-                                
-                                {/* City Suggestions Dropdown */}
-                                {showSuggestions && suggestions.length > 0 && (
-                                    <div className="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-64 overflow-y-auto">
-                                        {suggestions.map((suggestion, index) => (
-                                            <button
-                                                key={`${suggestion.name}-${index}`}
-                                                type="button"
-                                                onClick={() => handleSuggestionClick(suggestion)}
-                                                className="w-full px-4 py-3 text-left hover:bg-blue-50 border-b border-gray-100 last:border-b-0 transition-colors duration-150 flex items-center gap-3"
-                                            >
-                                                <div className={`w-2 h-2 rounded-full ${suggestion.type === 'city' ? 'bg-blue-500' : 'bg-purple-500'}`}></div>
-                                                <div>
-                                                    <div className="font-medium text-gray-900 text-sm">{suggestion.displayName}</div>
-                                                    <div className="text-xs text-gray-500">{suggestion.type === 'city' ? 'Città' : 'Paese'}</div>
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
                             </div>
                             
                             <div>
