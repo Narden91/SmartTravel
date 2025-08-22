@@ -1,0 +1,5 @@
+{
+  "name": "SmartTravel",
+  "description": "An intelligent travel companion app that uses AI to analyze destinations, provide weather and cost insights, and generate personalized packing lists for any trip. Powered by Gemini AI for up-to-date travel recommendations.",
+  "requestFramePermissions": []
+}

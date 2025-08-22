@@ -1,0 +1,278 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ======================================
+   DESIGN TOKENS SYSTEM - SMARTTRAVEL
+   ====================================== */
+   
+:root {
+  /* Typography - Google Fonts: Inter */
+  --font-family-sans: 'Inter', sans-serif;
+  
+  /* Font Sizes - Responsive Scale */
+  --text-display: 72px;  /* Hero headings */
+  --text-h1: 48px;       /* Main headings */
+  --text-h2: 36px;       /* Section headings */
+  --text-h3: 24px;       /* Subsection headings */
+  --text-body-lg: 18px;  /* Large body text */
+  --text-body: 16px;     /* Standard body text */
+  --text-body-sm: 14px;  /* Small body text */
+  
+  /* Letter Spacing - Typography Rhythm */
+  --tracking-heading: 0.1em;  /* Headings → Inter Black, uppercase */
+  --tracking-body: 0.02em;    /* Body → Inter Regular */
+  
+  /* Layout System - Container & Spacing */
+  --max-width-container: 1180px;    /* Max content width */
+  --padding-container-x: 24px;      /* Horizontal container padding */
+  --spacing-section-sm: 80px;       /* Small section padding */
+  --spacing-section: 100px;         /* Standard section padding */
+  --spacing-section-lg: 120px;      /* Large section padding */
+  
+  /* Pastel Color Palette - Travel Theme */
+  --color-primary: #7dd3fc;         /* Sky blue */
+  --color-primary-dark: #0ea5e9;    /* Darker sky blue */
+  --color-secondary: #86efac;       /* Soft green */
+  --color-accent: #fbbf24;          /* Warm amber */
+  --color-coral: #fca5a5;           /* Soft coral */
+  --color-lavender: #c4b5fd;        /* Light purple */
+  --color-peach: #fed7aa;           /* Peach */
+  --color-mint: #bbf7d0;            /* Mint green */
+  
+  /* Interactive States */
+  --transition-default: all 0.3s ease-in-out;
+}
+
+/* ======================================
+   GLOBAL STYLES
+   ====================================== */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family-sans);
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f3e8ff 100%);
+  min-height: 100vh;
+}
+
+/* ======================================
+   TYPOGRAPHY SYSTEM
+   Inter Black → Headings (uppercase, 0.1em tracking)
+   Inter Regular → Body (0.02em tracking)
+   ====================================== */
+.heading-display {
+  font-size: var(--text-display);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: var(--tracking-heading);
+  text-transform: uppercase;
+}
+
+.heading-h1 {
+  font-size: var(--text-h1);
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: var(--tracking-heading);
+  text-transform: uppercase;
+}
+
+.heading-h2 {
+  font-size: var(--text-h2);
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: var(--tracking-heading);
+  text-transform: uppercase;
+}
+
+.heading-h3 {
+  font-size: var(--text-h3);
+  font-weight: 900;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-heading);
+  text-transform: uppercase;
+}
+
+.body-lg {
+  font-size: var(--text-body-lg);
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: var(--tracking-body);
+}
+
+.body {
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: var(--tracking-body);
+}
+
+.body-sm {
+  font-size: var(--text-body-sm);
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: var(--tracking-body);
+}
+
+/* ======================================
+   LAYOUT SYSTEM
+   Max-width: 1180px centered, 24px padding
+   Section padding: 80px-120px vertical
+   ====================================== */
+
+.container {
+  max-width: var(--max-width-container);
+  margin: 0 auto;
+  padding-left: var(--padding-container-x);
+  padding-right: var(--padding-container-x);
+}
+
+.section {
+  padding-top: var(--spacing-section);
+  padding-bottom: var(--spacing-section);
+}
+
+.section-sm {
+  padding-top: var(--spacing-section-sm);
+  padding-bottom: var(--spacing-section-sm);
+}
+
+.section-lg {
+  padding-top: var(--spacing-section-lg);
+  padding-bottom: var(--spacing-section-lg);
+}
+
+/* ======================================
+   UTILITY CLASSES
+   ====================================== */
+.glass-effect {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-effect-dark {
+  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Top padding for fixed navbar */
+.navbar-offset {
+  padding-top: 80px;
+}
+
+/* Smooth transitions */
+* {
+  transition: var(--transition-default);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-dark);
+}
+
+/* Thin scrollbar utility classes */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thumb-blue-400::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+}
+
+.scrollbar-track-blue-100::-webkit-scrollbar-track {
+  background: rgba(125, 211, 252, 0.2);
+}
+
+/* ======================================
+   ANIMATION SYSTEM
+   ====================================== */
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 1s ease-out;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  0% { 
+    opacity: 0; 
+    transform: translateY(30px); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes slideUp {
+  0% { 
+    opacity: 0; 
+    transform: translateY(50px); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px); 
+  }
+  50% { 
+    transform: translateY(-10px); 
+  }
+}
+
+/* ======================================
+   TRAVEL THEME SPECIFIC STYLES
+   ====================================== */
+
+.travel-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.travel-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border-color: var(--color-primary);
+}
+
+.pastel-gradient {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 50%, var(--color-lavender) 100%);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
